@@ -1,0 +1,148 @@
+﻿@model MTKPM_FE.Helpers.PaginatedList<MTKPM_FE.Models.Product>
+
+@{
+	ViewData["Title"] = "Tất cả sản phẩm";
+	Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="background: #F8F6F3;">
+	<div class="container py-2">
+		<nav aria-label="breadcrumb">
+			<ol class="breadcrumb mb-0" style="background: transparent;">
+				<li class="breadcrumb-item">
+					<a asp-controller="Home" asp-action="Index" class="fw-semibold text-decoration-none" style="color: #8B6F5A;">Trang chủ</a>
+				</li>
+				<li class="breadcrumb-item active fw-semibold" aria-current="page" style="color: #8B6F5A;">Tất cả sản phẩm</li>
+			</ol>
+		</nav>
+	</div>
+</div>
+
+<style>
+	.pagination .page-link {
+		color: #8B6F5A;
+		background-color: transparent;
+		border-color: #dee2e6;
+	}
+
+		.pagination .page-link:hover {
+			color: #5a4a3a;
+			background-color: #e9ecef;
+		}
+
+	.pagination .page-item.active .page-link {
+		background-color: #212529;
+		border-color: #212529;
+		color: #fff;
+		z-index: 2;
+	}
+</style>
+
+<div class="container my-5">
+	<h2 class="section-title mb-4">@ViewData["Title"]</h2>
+
+	<form method="get" asp-action="AllProducts" id="searchForm" class="mb-5 bg-light p-4 rounded border">
+
+		<div class="row g-3 mb-3">
+			<div class="col-md-3">
+				<input type="text" name="searchTerm" class="form-control" placeholder="Tìm kiếm sản phẩm..." value="@ViewBag.CurrentSearch" />
+			</div>
+			<div class="col-md-2">
+				<input type="number" name="minPrice" class="form-control" placeholder="Giá từ (VNĐ)..." value="@ViewBag.MinPrice" />
+			</div>
+			<div class="col-md-2">
+				<input type="number" name="maxPrice" class="form-control" placeholder="Đến giá (VNĐ)..." value="@ViewBag.MaxPrice" />
+			</div>
+			<div class="col-md-3">
+				<select name="sortOrder" class="form-select">
+					<option value="">Sắp xếp mặc định</option>
+					<option value="rating_desc" selected="@(ViewBag.CurrentSort == "rating_desc" ? "selected" : null)">Đánh giá cao</option>
+					<option value="price_asc" selected="@(ViewBag.CurrentSort == "price_asc" ? "selected" : null)">Giá: Tăng dần</option>
+					<option value="price_desc" selected="@(ViewBag.CurrentSort == "price_desc" ? "selected" : null)">Giá: Giảm dần</option>
+					<option value="name_asc" selected="@(ViewBag.CurrentSort == "name_asc" ? "selected" : null)">Tên A-Z</option>
+					<option value="newest" selected="@(ViewBag.CurrentSort == "newest" ? "selected" : null)">Mới nhất</option>
+				</select>
+			</div>
+			<div class="col-md-2 d-flex gap-2">
+				<button type="submit" class="btn btn-dark w-100">Tìm & Lọc</button>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-md-10 d-flex flex-wrap align-items-center">
+				<strong class="me-3 mb-2">Danh mục:</strong>
+				@foreach (var category in ViewBag.Categories)
+				{
+					var isChecked = ViewBag.CurrentCategories != null && ((List<int>)ViewBag.CurrentCategories).Contains(category.category_id);
+					<div class="form-check me-3 mb-2">
+						<input class="form-check-input" type="checkbox" name="categoryIds" value="@category.category_id" id="cat_@category.category_id" @(isChecked ? "checked" : "")>
+						<label class="form-check-label" for="cat_@category.category_id">@category.category_name</label>
+					</div>
+				}
+			</div>
+			<div class="col-md-2 text-end">
+				<a href="/Home/AllProducts" id="btnClearFilter" class="btn btn-outline-secondary w-100">Xóa bộ lọc</a>
+			</div>
+		</div>
+	</form>
+
+	@if (!string.IsNullOrEmpty(ViewBag.CurrentSearch))
+	{
+		<div class="search-result-text mb-3">Bạn đã tìm: <strong>@ViewBag.CurrentSearch</strong></div>
+	}
+
+	@if (ViewBag.SearchError != null)
+	{
+		<div class="alert alert-danger text-center fw-bold">@ViewBag.SearchError</div>
+	}
+
+	@if (Model.Any())
+	{
+		<div class="row g-4">
+			@foreach (var product in Model)
+			{
+				<partial name="_ProductCard" model="product" />
+			}
+		</div>
+
+		<nav aria-label="Page navigation" class="mt-5">
+			<ul class="pagination justify-content-center">
+				@{
+					var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+					<li class="page-item @prevDisabled">
+						<a class="page-link" href="javascript:void(0);" onclick="goToPage(@(Model.PageIndex - 1))">&laquo;</a>
+					</li>
+
+					for (int i = 1; i <= Model.TotalPages; i++)
+					{
+						<li class="page-item @(i == Model.PageIndex ? "active" : "")">
+							<a class="page-link" href="javascript:void(0);" onclick="goToPage(@i)">@i</a>
+						</li>
+					}
+
+					var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+					<li class="page-item @nextDisabled">
+						<a class="page-link" href="javascript:void(0);" onclick="goToPage(@(Model.PageIndex + 1))">&raquo;</a>
+					</li>
+				}
+			</ul>
+		</nav>
+	}
+	else if (ViewBag.SearchError == null)
+	{
+		<div class="alert alert-secondary text-center">
+			Không tìm thấy sản phẩm nào.
+		</div>
+	}
+</div>
+<script>
+	function goToPage(page) {
+		let form = document.getElementById('searchForm');
+		let input = document.createElement('input');
+		input.type = 'hidden';
+		input.name = 'page';
+		input.value = page;
+		form.appendChild(input);
+		form.submit();
+	}
+</script>

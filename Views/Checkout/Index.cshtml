@@ -1,0 +1,125 @@
+﻿@model MTKPM_FE.Models.Order
+@{
+    ViewData["Title"] = "Thanh toán đơn hàng";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Sử dụng Layout chuẩn có Navbar/Footer
+    decimal totalCartPrice = ViewBag.TotalCartPrice ?? 0;
+}
+
+<div class="container my-5">
+    <h2 class="mb-4 text-uppercase fw-bold" style="color: #8B6F5A;">
+        <i class="fas fa-money-check-alt me-2"></i> Thanh toán
+    </h2>
+
+    <div class="row">
+        <div class="col-md-7 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Thông tin giao hàng</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="PlaceOrder" asp-controller="Checkout" method="post" id="checkout-form">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                            <input asp-for="FullName" type="text" class="form-control" placeholder="Nhập họ và tên" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                            <input asp-for="PhoneNumber" type="text" class="form-control" placeholder="09xxxxxxxx" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="Email nhận thông báo đơn hàng" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ nhận hàng <span class="text-danger">*</span></label>
+                            <input asp-for="Address" type="text" class="form-control" placeholder="Số nhà, Tên đường, Phường/Xã, Quận/Huyện" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div id="payment-methods-section" class="mt-4 border-top pt-3">
+                            <h5 class="fw-bold mb-3">Phương thức thanh toán</h5>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input payment-radio" type="radio" asp-for="PaymentMethod" id="payment-method-cod" value="COD" checked>
+                                <label class="form-check-label fw-semibold" for="payment-method-cod">
+                                    Thanh toán khi nhận hàng (COD) <br />
+                                    <small class="text-muted">Bắt buộc chuyển khoản cọc trước 30% giá trị đơn hàng.</small>
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input payment-radio" type="radio" asp-for="PaymentMethod" id="payment-method-online" value="ONLINE">
+                                <label class="form-check-label fw-semibold" for="payment-method-online">
+                                    Thanh toán Online (QR Code) <br />
+                                    <small class="text-muted">Chuyển khoản 100% giá trị đơn hàng.</small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-between">
+                            <a asp-action="Index" asp-controller="Cart" class="btn btn-outline-secondary px-4">Quay lại giỏ hàng</a>
+                            <button type="submit" class="btn px-5 text-white" id="btn-place-order" style="background: #8B6F5A; border: none;">Xác nhận đặt hàng</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 bg-light position-sticky" style="top: 20px;">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0 fw-bold">Tóm tắt đơn hàng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3 fs-5">
+                        <span>Tổng giá trị đơn hàng: </span>
+                        <strong class="text-dark" id="checkout-total-price" data-value="@totalCartPrice">@totalCartPrice.ToString("N0") ₫</strong>
+                    </div>
+
+                    <div id="deposit-section" class="alert alert-warning border-warning">
+                        <i class="fas fa-qrcode me-1"></i>
+                        <span id="deposit-label">Số tiền cần quét QR cọc (30%): </span><br />
+                        <strong id="checkout-deposit-price" class="fs-3 text-danger">0 ₫</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function calculateTransferAmount() {
+            let isCOD = document.getElementById('payment-method-cod').checked;
+            let total = parseInt(document.getElementById('checkout-total-price').getAttribute('data-value'));
+
+            let depositLabel = document.getElementById('deposit-label');
+            let depositPriceEl = document.getElementById('checkout-deposit-price');
+
+            if (isCOD) {
+                // Tính 30% và làm tròn đến hàng nghìn
+                let deposit = Math.round((total * 0.3) / 1000) * 1000;
+                depositLabel.innerText = "Số tiền cần quét QR cọc (30%):";
+                depositPriceEl.innerText = deposit.toLocaleString('vi-VN') + ' ₫';
+            } else {
+                // Online = 100%
+                depositLabel.innerText = "Số tiền cần quét QR thanh toán (100%):";
+                depositPriceEl.innerText = total.toLocaleString('vi-VN') + ' ₫';
+            }
+        }
+
+        // Bắt sự kiện thay đổi lựa chọn thanh toán
+        document.querySelectorAll('.payment-radio').forEach(radio => {
+            radio.addEventListener('change', calculateTransferAmount);
+        });
+
+        // Chạy lần đầu để hiển thị 30% mặc định
+        calculateTransferAmount();
+    </script>
+}

@@ -1,0 +1,55 @@
+﻿@model MTKPM_FE.Models.Product
+@using MTKPM_FE.Models
+@{
+    var categories = ViewData["category"] as List<Category>;
+}
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 text-center text-uppercase" style="letter-spacing:4px">Thêm Sản Phẩm Mới</h2>
+</div>
+<div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+        <form method="post" enctype="multipart/form-data">
+
+            <label class="fw-bold mt-2">Tên sản phẩm (*):</label>
+            <input type="text" asp-for="product_name" placeholder="Enter Product Name" class="form-control my-2" required />
+            <span asp-validation-for="product_name" class="text-danger fw-bold"></span>
+
+            <label class="fw-bold mt-2">Giá sản phẩm (*):</label>
+            <input type="number" asp-for="product_price" placeholder="Enter Product Price" class="form-control my-2" required min="1" />
+
+            <label class="fw-bold mt-2">Tồn kho (Stock) (*):</label>
+            <input type="number" asp-for="product_stock" placeholder="Enter Stock Quantity" class="form-control my-2" required min="0" />
+
+            <label class="fw-bold mt-2">Danh mục (*):</label>
+            <select asp-for="cat_id" class="form-control my-2" required>
+                <option value="">-- Chọn danh mục --</option>
+                @if (categories != null)
+                {
+                    foreach (var cat in categories)
+                    {
+                        <option value="@cat.category_id">@cat.category_name</option>
+                    }
+                }
+            </select>
+
+            <label class="fw-bold mt-2 text-primary">Ảnh sản phẩm (Bỏ trống sẽ lấy ảnh mặc định):</label>
+            <input type="file" name="image_file" accept="image/*" class="form-control my-2" />
+
+            <label class="fw-bold mt-2">Mô tả sản phẩm:</label>
+            <input type="text" asp-for="product_description" placeholder="Enter Product Description" class="form-control my-2" />
+
+            <label class="fw-bold mt-2">Giá khuyến mãi:</label>
+            <input type="number" asp-for="product_discount_price" placeholder="Discount Price (optional)" class="form-control my-2" />
+
+            <label class="fw-bold mt-2">Đánh giá (Rating):</label>
+            <input type="number" step="0.1" asp-for="product_rating" placeholder="Rating (0 - 5)" class="form-control my-2" />
+
+            <label class="fw-bold mt-2">Lượt đánh giá (Review Count):</label>
+            <input type="number" asp-for="product_review_count" placeholder="Review Count" class="form-control my-2" />
+
+            <input type="submit" value="Add Product" class="form-control my-4 btn btn-primary fw-bold" />
+        </form>
+    </div>
+</div>

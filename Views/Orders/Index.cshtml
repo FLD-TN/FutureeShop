@@ -1,0 +1,99 @@
+﻿@model List<MTKPM_FE.Models.Order>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+<div class="container py-5">
+    <h2 class="mb-4 fw-bold">Đơn hàng đã đặt</h2>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">Bạn chưa có đơn hàng nào.</div>
+    }
+    else
+    {
+        <table class="table table-hover align-middle shadow-sm bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã đơn</th>
+                    <th>Ngày đặt</th>
+                    <th>Giá trị</th>
+                    <th>Thanh toán</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    <tr class="order-item-row">
+                        <td class="fw-bold">#@o.OrderID</td>
+                        <td>@o.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-danger fw-bold">@o.TotalAmount.ToString("N0") ₫</td>
+                        <td>
+                            <span class="badge bg-@(o.PaymentStatus == "Paid" ? "success" : "warning") text-dark">
+                                @o.PaymentStatus
+                            </span>
+                        </td>
+                        <td><span class="badge bg-secondary">@o.OrderStatus</span></td>
+                        <td class="text-end">
+                            <a asp-controller="Orders" asp-action="OrderDetail" asp-route-id="@o.OrderID" class="btn btn-sm btn-outline-info btn-view-detail mb-1">Chi tiết</a>
+
+                            <a asp-controller="Payment" asp-action="Invoice" asp-route-id="@o.OrderID" class="btn btn-sm btn-outline-primary mb-1">Hóa đơn</a>
+
+                            @if (o.OrderStatus == "Chờ xác nhận")
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-request-cancel mb-1" onclick="openCancelModal(@o.OrderID)">Yêu cầu hủy</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<div class="modal fade" id="customerCancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Yêu cầu hủy đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="cancelOrderId" />
+                <label class="form-label fw-bold">Lý do hủy đơn:</label>
+                <textarea id="customerCancelReason" class="form-control" rows="3" placeholder="Ví dụ: Tôi muốn đổi địa chỉ nhận hàng..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-danger" id="btn-submit-customer-cancel" onclick="submitCancel()">Gửi yêu cầu hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openCancelModal(id) {
+            document.getElementById('cancelOrderId').value = id;
+            document.getElementById('customerCancelReason').value = '';
+            var modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('customerCancelModal'));
+            modal.show();
+        }
+
+        function submitCancel() {
+            var id = document.getElementById('cancelOrderId').value;
+            var reason = document.getElementById('customerCancelReason').value;
+
+            fetch('/Orders/RequestCancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `orderId=${id}&reason=${encodeURIComponent(reason)}`
+            }).then(res => res.json()).then(data => {
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('customerCancelModal')).hide();
+                alert(data.message);
+                if(data.success) location.reload();
+            }).catch(err => console.error(err));
+        }
+    </script>
+}

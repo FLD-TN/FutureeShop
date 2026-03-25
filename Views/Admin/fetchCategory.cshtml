@@ -1,0 +1,81 @@
+﻿@model List<MTKPM_FE.Models.Category>
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 text-center text-uppercase" style="letter-spacing:4px">All Category</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert">
+            <strong><i class="fas fa-check-circle"></i> Thành công!</strong> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3 shadow-sm" role="alert">
+            <strong><i class="fas fa-exclamation-triangle"></i> Lỗi!</strong> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+</div>
+
+<div class="row px-4">
+    <div class="col-md-12">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-4">
+                <input type="text" name="searchTerm" class="form-control" placeholder="Tìm kiếm tên danh mục..." value="@(ViewContext.HttpContext.Request.Query["searchTerm"].ToString())" />
+            </div>
+            <div class="col-md-3">
+                <select name="sortBy" class="form-select">
+                    <option value="">Sắp xếp</option>
+                    <option value="name" selected="@(ViewContext.HttpContext.Request.Query["sortBy"] == "name")">Tên</option>
+                    <option value="products" selected="@(ViewContext.HttpContext.Request.Query["sortBy"] == "products")">Số sản phẩm</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100"><i class="fas fa-search"></i> Tìm</button>
+            </div>
+        </form>
+
+        <a href="@Url.Action("addCategory", "Admin")" class="btn btn-success mb-3">
+            <i class="fas fa-plus"></i> Add New Category
+        </a>
+
+        <table class="table table-bordered table-hover bg-white text-center mt-2 shadow-sm">
+            <thead class="table-dark">
+                <tr>
+                    <th>Category Id</th>
+                    <th>Category Name</th>
+                    <th>Options</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var cat in Model)
+                    {
+                        <tr>
+                            <td class="align-middle">@cat.category_id</td>
+                            <td class="align-middle fw-bold text-primary">@cat.category_name</td>
+                            <td class="align-middle">
+                                <a href="@Url.Action("updateCategory", "Admin", new { id = cat.category_id })" class="btn btn-primary btn-sm mb-1">Update</a>
+
+                                <a href="@Url.Action("deletePermissionCategory", "Admin", new { id = cat.category_id })"
+                                   class="btn btn-danger btn-sm mb-1"
+                                   onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục [ @cat.category_name ] không?');">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="3" class="text-muted py-3">Không có danh mục nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

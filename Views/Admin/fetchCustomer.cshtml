@@ -1,0 +1,116 @@
+﻿@model List<MTKPM_FE.Models.Customer>
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 text-center text-uppercase" style="letter-spacing:4px">All Customer</h2>
+
+    <form method="get" class="row g-2 mt-3">
+        <div class="col-md-4">
+            <input type="text" name="searchTerm" class="form-control" placeholder="Tìm kiếm tên, email, điện thoại..." value="@(ViewContext.HttpContext.Request.Query["searchTerm"].ToString())" />
+        </div>
+        <div class="col-md-3">
+            <select name="sortBy" class="form-select">
+                <option value="">Sắp xếp</option>
+                <option value="name" selected="@(ViewContext.HttpContext.Request.Query["sortBy"] == "name")">Tên</option>
+                <option value="orders" selected="@(ViewContext.HttpContext.Request.Query["sortBy"] == "orders")">Số đơn</option>
+                <option value="date" selected="@(ViewContext.HttpContext.Request.Query["sortBy"] == "date")">Ngày đăng ký</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="fromDate" class="form-control" value="@(ViewContext.HttpContext.Request.Query["fromDate"].ToString())" />
+        </div>
+        <div class="col-md-2">
+            <input type="date" name="toDate" class="form-control" value="@(ViewContext.HttpContext.Request.Query["toDate"].ToString())" />
+        </div>
+        <div class="col-md-1">
+            <button class="btn btn-primary w-100">Tìm</button>
+        </div>
+    </form>
+</div>
+
+<div class="px-4">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success mt-3 shadow-sm alert-dismissible fade show" role="alert">
+            <strong><i class="fas fa-check-circle"></i> Thành công!</strong> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger mt-3 shadow-sm alert-dismissible fade show" role="alert">
+            <strong><i class="fas fa-exclamation-triangle"></i> Lỗi!</strong> @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="mt-3 mb-3">
+        <a href="@Url.Action("addCustomer", "Admin")" class="btn btn-success">
+            <i class="fas fa-plus"></i> Thêm người dùng mới
+        </a>
+    </div>
+</div>
+
+<div class="row px-4">
+    <div class="col-md-12">
+        <table class="table table-bordered table-hover table-striped text-center mt-2 shadow-sm bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Customer Phone</th>
+                    <th>Customer Country</th>
+                    <th>Customer City</th>
+                    <th>Customer Address</th>
+                    <th>Options</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var cust in Model)
+                    {
+                        <tr class="@(cust.IsLocked ? "table-secondary text-muted" : "")">
+                            <td class="align-middle fw-bold">
+                                @cust.customer_name
+                                @if (cust.IsLocked)
+                                {
+                                    <span class="badge bg-danger ms-1">Đã khóa</span>
+                                }
+                            </td>
+                            <td class="align-middle">@cust.customer_phone</td>
+                            <td class="align-middle">@cust.customer_country</td>
+                            <td class="align-middle">@cust.customer_city</td>
+                            <td class="align-middle">@cust.customer_address</td>
+                            <td class="align-middle">
+                                <a href="@Url.Action("customerDetails", "Admin", new { id = cust.customer_id })" class="btn btn-primary btn-sm mb-1">Details</a>
+                                <a href="@Url.Action("updateCustomer", "Admin", new { id = cust.customer_id })" class="btn btn-warning btn-sm mb-1">Update</a>
+
+                                @if (!cust.IsLocked)
+                                {
+                                    <a href="@Url.Action("ToggleLock", "Admin", new { id = cust.customer_id })"
+                                       class="btn btn-secondary btn-sm mb-1 btn-lock"
+                                       onclick="return confirm('Bạn có chắc chắn muốn KHÓA tài khoản của [ @cust.customer_name ] không?');">Khóa</a>
+                                }
+                                else
+                                {
+                                    <a href="@Url.Action("ToggleLock", "Admin", new { id = cust.customer_id })"
+                                       class="btn btn-success btn-sm mb-1 btn-unlock"
+                                       onclick="return confirm('Bạn có chắc chắn muốn MỞ KHÓA tài khoản của [ @cust.customer_name ] không?');">Mở Khóa</a>
+                                }
+
+                                <a href="@Url.Action("deletePermission", "Admin", new { id = cust.customer_id })"
+                                   class="btn btn-danger btn-sm mb-1"
+                                   onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng này? Hành động này không thể hoàn tác!');">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-muted py-4">Không tìm thấy người dùng nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

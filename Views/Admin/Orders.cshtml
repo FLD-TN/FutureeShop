@@ -1,0 +1,276 @@
+﻿@model List<MTKPM_FE.Models.Order>
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
+
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Quản lý đơn hàng</h2>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(string.IsNullOrEmpty(ViewBag.StatusFilter) ? "active fw-bold bg-light" : "")"
+               href="/Admin/Orders">
+                <i class="fas fa-list"></i> Tất cả đơn hàng
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-success @(ViewBag.StatusFilter == "Chờ xác nhận" ? "active fw-bold bg-light border-bottom-0" : "")"
+               href="/Admin/Orders?statusFilter=Chờ xác nhận">
+                <i class="fas fa-box"></i> Đơn mới chờ duyệt
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-danger @(ViewBag.StatusFilter == "Yêu cầu hủy" ? "active fw-bold bg-light border-bottom-0" : "")"
+               href="/Admin/Orders?statusFilter=Yêu cầu hủy">
+                <i class="fas fa-exclamation-circle"></i> Yêu cầu hủy cần xử lý
+            </a>
+        </li>
+    </ul>
+
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <form method="get" action="/Admin/Orders" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Tìm kiếm (Mã đơn, Tên KH)</label>
+                    <input type="text" name="searchTerm" class="form-control" value="@ViewBag.SearchTerm" placeholder="Nhập từ khóa..." />
+                </div>
+                <input type="hidden" name="statusFilter" value="@ViewBag.StatusFilter" />
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Tìm</button>
+                </div>
+                <div class="col-md-2">
+                    <a href="/Admin/Orders" class="btn btn-outline-secondary w-100"><i class="fas fa-undo"></i> Bỏ lọc</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover bg-white align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>Mã Đơn</th>
+                    <th>Khách Hàng</th>
+                    <th>Ngày Tạo</th>
+                    <th>Tổng Tiền</th>
+                    <th>Trạng Thái</th>
+                    <th>Hành Động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var o in Model)
+                    {
+                        <tr class="@(o.OrderStatus == "Chờ xác nhận" ? "table-warning" : "")">
+                            <td class="fw-bold">#@o.OrderID</td>
+                            <td>@o.FullName</td>
+                            <td>@o.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-danger fw-bold">@o.TotalAmount.ToString("N0") ₫</td>
+                            <td>
+                                @if (o.OrderStatus == "Chờ xác nhận")
+                                {
+                                    <span class="badge bg-warning text-dark">@o.OrderStatus</span>
+                                }
+                                else if (o.OrderStatus == "Đã xác nhận")
+                                {
+
+                                    <span class="badge bg-success">@o.OrderStatus</span>
+                                }
+                                else if (o.OrderStatus == "Yêu cầu hủy")
+                                {
+
+                                    <span class="badge bg-danger">@o.OrderStatus</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge bg-secondary">@o.OrderStatus</span>
+                                }
+                            </td>
+                            <td>
+                                <a href="/Admin/OrderDetail?id=@o.OrderID" class="btn btn-info btn-sm text-white mb-1">
+                                    <i class=\"fas fa-eye\"></i> Chi tiết
+                                </a>
+
+                                @if (o.OrderStatus == "Chờ xác nhận")
+                                {
+                                    <button class="btn btn-success btn-sm mb-1" onclick="openConfirmOrder(@o.OrderID, '@o.FullName', '@o.TotalAmount.ToString("N0")')">Xác nhận</button>
+                                    <button class="btn btn-danger btn-sm mb-1" onclick="openAdminCancel(@o.OrderID)">Hủy</button>
+                                }
+                                else if (o.OrderStatus == "Yêu cầu hủy")
+                                {
+                                    <button class="btn btn-warning btn-sm mb-1" onclick="updateStatus(@o.OrderID, 'ApproveCancel')">Duyệt hủy</button>
+                                    <button class="btn btn-secondary btn-sm mb-1" onclick="openReject(@o.OrderID)">Từ chối</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">Không tìm thấy đơn hàng nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="/Admin/Orders?page=@(ViewBag.CurrentPage - 1)&searchTerm=@ViewBag.SearchTerm&statusFilter=@ViewBag.StatusFilter">Trước</a>
+                </li>
+
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                        <a class="page-link" href="/Admin/Orders?page=@i&searchTerm=@ViewBag.SearchTerm&statusFilter=@ViewBag.StatusFilter">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="/Admin/Orders?page=@(ViewBag.CurrentPage + 1)&searchTerm=@ViewBag.SearchTerm&statusFilter=@ViewBag.StatusFilter">Sau</a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>
+
+<div class="modal fade" id="confirmOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="fas fa-check-circle"></i> Xác nhận đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="confirmOrderId" />
+                <p class="fs-5">Bạn có chắc chắn muốn xác nhận đơn hàng này không?</p>
+                <div class="alert alert-light border">
+                    <ul class="mb-0 list-unstyled">
+                        <li><strong>Mã đơn hàng:</strong> <span id="confirm-order-code" class="text-primary"></span></li>
+                        <li><strong>Khách hàng:</strong> <span id="confirm-order-name"></span></li>
+                        <li><strong>Tổng tiền:</strong> <span id="confirm-order-total" class="text-danger fw-bold"></span> ₫</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-success" onclick="submitConfirmOrder()">Duyệt đơn này</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="adminCancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-times-circle"></i> Hủy đơn hàng</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="adminCancelId" />
+                <label class="form-label fw-bold">Lý do hủy đơn:</label>
+                <input type="text" id="cancelReason" class="form-control" placeholder="Nhập lý do hủy..." />
+                <span id="cancel-reason-error" class="text-danger"></span>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-danger" id="btn-submit-cancel" onclick="submitAdminCancel()">Xác nhận hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">Từ chối yêu cầu hủy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="rejectId" />
+                <label class="form-label fw-bold">Lý do từ chối:</label>
+                <input type="text" id="rejectReason" class="form-control" placeholder="Hàng đã giao cho shipper..." />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-warning" id="btn-submit-reject" onclick="submitReject()">Từ chối hủy</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openConfirmOrder(id, name, total) {
+        document.getElementById('confirmOrderId').value = id;
+        document.getElementById('confirm-order-code').innerText = '#' + id;
+        document.getElementById('confirm-order-name').innerText = name;
+        document.getElementById('confirm-order-total').innerText = total;
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmOrderModal')).show();
+    }
+
+    function submitConfirmOrder() {
+        var id = document.getElementById('confirmOrderId').value;
+        fetch(`/Admin/ConfirmOrder?id=${id}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmOrderModal')).hide();
+                if (data.success) location.reload();
+            }).catch(err => console.error(err));
+    }
+
+    function openAdminCancel(id) {
+        document.getElementById('adminCancelId').value = id;
+        document.getElementById('cancelReason').value = '';
+        document.getElementById('cancel-reason-error').innerText = '';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('adminCancelModal')).show();
+    }
+
+    function submitAdminCancel() {
+        var reason = document.getElementById('cancelReason').value;
+        if (!reason) {
+            document.getElementById('cancel-reason-error').innerText = "Vui lòng nhập lý do";
+            return;
+        }
+        fetch(`/Admin/CancelOrder?id=${document.getElementById('adminCancelId').value}&reason=${encodeURIComponent(reason)}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('adminCancelModal')).hide();
+                if (data.success) location.reload();
+            }).catch(err => console.error(err));
+    }
+
+    function openReject(id) {
+        document.getElementById('rejectId').value = id;
+        document.getElementById('rejectReason').value = '';
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('rejectModal')).show();
+    }
+
+    function submitReject() {
+        var reason = document.getElementById('rejectReason').value;
+        fetch(`/Admin/RejectCancel?id=${document.getElementById('rejectId').value}&reason=${encodeURIComponent(reason)}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('rejectModal')).hide();
+                if (data.success) location.reload();
+            }).catch(err => console.error(err));
+    }
+
+    function updateStatus(id, actionType) {
+        fetch(`/Admin/${actionType}?id=${id}`, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) location.reload();
+            }).catch(err => console.error(err));
+    }
+</script>

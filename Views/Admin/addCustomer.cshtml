@@ -1,0 +1,29 @@
+﻿@model MTKPM_FE.Models.Customer
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 text-center text-uppercase" style="letter-spacing:4px">Thêm Người Dùng</h2>
+</div>
+<div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+        <form method="post">
+            <label class="fw-bold mt-2">Họ Tên (*):</label>
+            <input type="text" asp-for="customer_name" class="form-control my-2" placeholder="Nhập họ tên" required />
+            <span asp-validation-for="customer_name" class="text-danger fw-bold"></span>
+
+            <label class="fw-bold mt-2">Email (*):</label>
+            <input type="email" asp-for="customer_email" class="form-control my-2" placeholder="Nhập email" required />
+            <span asp-validation-for="customer_email" class="text-danger fw-bold"></span>
+
+            <label class="fw-bold mt-2">Số điện thoại (*):</label>
+            <input type="text" asp-for="customer_phone" class="form-control my-2" placeholder="Nhập số điện thoại" required />
+            <span asp-validation-for="customer_phone" class="text-danger fw-bold"></span>
+
+            <label class="fw-bold mt-2">Mật khẩu (*):</label>
+            <input type="password" asp-for="customer_password" class="form-control my-2" placeholder="Nhập mật khẩu" required />
+            <span asp-validation-for="customer_password" class="text-danger fw-bold"></span>
+
+            <input type="submit" value="Thêm Người Dùng" class="form-control my-4 btn btn-success fw-bold" />
+        </form>
+    </div>
+</div>

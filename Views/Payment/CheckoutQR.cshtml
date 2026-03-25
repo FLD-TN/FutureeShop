@@ -1,0 +1,48 @@
+﻿@model MTKPM_FE.Models.Order
+@{
+    ViewData["Title"] = "Thanh toán mã QR";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // Giữ lại Layout Navbar/Footer
+}
+
+<div class="container my-5 text-center">
+    <h2 class="mb-4 text-uppercase fw-bold" style="color: #8B6F5A;">Quét mã QR để thanh toán</h2>
+
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-danger fs-5 d-inline-block p-4">
+            <i class="fas fa-exclamation-triangle me-2"></i> @ViewBag.ErrorMessage
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm mx-auto border-0" style="max-width: 500px; background-color: #F8F6F3;">
+            <div class="card-body p-4">
+                <h5 class="card-title text-success mb-3 fw-bold">
+                    <i class="fas fa-check-circle me-1"></i> Đơn hàng #@Model.OrderID đã được tạo thành công!
+                </h5>
+                <p class="card-text text-muted mb-4">
+                    @(Model.PaymentMethod == "COD" ? "Vui lòng quét mã QR dưới đây để thanh toán tiền cọc (30%)." : "Vui lòng quét mã QR dưới đây để thanh toán toàn bộ đơn hàng (100%).")
+                </p>
+
+                <div class="bg-white p-3 rounded mb-4 shadow-sm">
+                    <img src="@ViewBag.QRCodeUrl" alt="Mã QR Thanh Toán" id="vietqr-image" class="img-fluid" style="max-height: 300px;" />
+                </div>
+
+                <div class="bg-white p-3 rounded text-start shadow-sm border-start border-4 border-warning">
+                    <p class="mb-1"><strong>Số tiền cần chuyển:</strong> <span class="text-danger fs-5 fw-bold">@Model.DepositAmount.ToString("N0") VNĐ</span></p>
+                    <p class="mb-1"><strong>Nội dung CK:</strong> Thanh toan don hang @Model.OrderID</p>
+                    <p class="mb-0"><strong>Trạng thái:</strong> <span class="badge bg-warning text-dark">@Model.OrderStatus</span></p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-5">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary px-4 py-2 me-2">
+            <i class="fas fa-home me-1"></i> Về trang chủ
+        </a>
+        <a asp-controller="Account" asp-action="Orders" class="btn text-white px-4 py-2" style="background: #8B6F5A;">
+            Xem đơn hàng của tôi <i class="fas fa-arrow-right ms-1"></i>
+        </a>
+    </div>
+</div>

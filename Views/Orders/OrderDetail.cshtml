@@ -1,0 +1,62 @@
+﻿@model MTKPM_FE.Models.Order
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = $"Chi tiết đơn hàng #{Model.OrderID}";
+}
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Chi tiết đơn hàng #@Model.OrderID</h2>
+        <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Ngày đặt hàng:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Trạng thái thanh toán:</strong> <span class="badge bg-warning text-dark">@Model.PaymentStatus</span></p>
+                    <p><strong>Trạng thái đơn hàng:</strong> <span class="badge bg-secondary">@Model.OrderStatus</span></p>
+                </div>
+                <div class="col-md-6">
+                    @if (!string.IsNullOrEmpty(Model.CancelReason))
+                    {
+                        <p class="text-danger"><strong>Lý do xin hủy:</strong> @Model.CancelReason</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.RejectReason))
+                    {
+                        <p class="text-warning text-dark"><strong>Lý do từ chối hủy:</strong> @Model.RejectReason</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-bordered bg-white align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Sản phẩm</th>
+                <th class="text-center">Số lượng</th>
+                <th class="text-end">Đơn giá</th>
+                <th class="text-end">Thành tiền</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderDetails)
+            {
+                <tr>
+                    <td>@item.Product.product_name</td>
+                    <td class="text-center">@item.Quantity</td>
+                    <td class="text-end">@item.Price.ToString("N0") ₫</td>
+                    <td class="text-end text-danger fw-bold">@((item.Price * item.Quantity).ToString("N0")) ₫</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end fw-bold">Tổng cộng:</td>
+                <td class="text-end text-danger fw-bold fs-5">@Model.TotalAmount.ToString("N0") ₫</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>

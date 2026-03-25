@@ -1,0 +1,17 @@
+﻿@model MTKPM_FE.Models.Category
+
+<div class="container-fluid px-4">
+    <h2 class="mt-4 text-center text-uppercase" style="letter-spacing:4px">Thêm Danh Mục</h2>
+</div>
+<div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+        <form method="post">
+            <label class="fw-bold">Tên danh mục (*):</label>
+            <input type="text" asp-for="category_name" class="form-control my-2" placeholder="Nhập tên danh mục..." required />
+            <span asp-validation-for="category_name" class="text-danger fw-bold"></span>
+
+            <input type="submit" value="Add Category" class="form-control my-3 btn btn-primary" />
+        </form>
+    </div>
+</div>
