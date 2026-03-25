@@ -1,20 +1,20 @@
-# Phần 1: Build ứng dụng bằng .NET SDK
+# Sử dụng SDK 6.0 để build
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-# Thay "Tên_Project_Của_Bạn" bằng tên file .csproj của bạn (ví dụ: MyApp.csproj)
+# Copy file project và restore trước để tận dụng cache
+# LƯU Ý: Kiểm tra chính xác tên file MTKPM_FE.csproj ở đây
 COPY ["MTKPM_FE.csproj", "./"]
 RUN dotnet restore "MTKPM_FE.csproj"
 
+# Copy toàn bộ code còn lại và build
 COPY . .
-WORKDIR "/src/"
-RUN dotnet publish "MTKPM_FE.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "MTKPM_FE.csproj" -c Release -o out /p:UseAppHost=false
 
-# Phần 2: Chạy ứng dụng bằng .NET Runtime (nhẹ hơn)
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
+# Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
-EXPOSE 8080 
-COPY --from=build /app/publish .
+COPY --from=build /app/out .
 
-# Thay "Tên_Project_Của_Bạn" bằng tên file .dll của bạn (ví dụ: MyApp.dll)
+# LƯU Ý: Kiểm tra chính xác tên file MTKPM_FE.dll ở đây
 ENTRYPOINT ["dotnet", "MTKPM_FE.dll"]
