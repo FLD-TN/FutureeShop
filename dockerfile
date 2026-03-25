@@ -9,8 +9,7 @@ RUN dotnet restore "MTKPM_FE.csproj"
 
 # Copy toàn bộ code còn lại và build
 COPY . .
-RUN dotnet publish "MTKPM_FE.csproj" -c Release -o out /p:UseAppHost=false
-
+RUN dotnet publish "MTKPM_FE.csproj" -c Release -o /app/publish /p:UseAppHost=false
 # Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
