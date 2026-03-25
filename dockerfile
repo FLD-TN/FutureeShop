@@ -1,19 +1,21 @@
-# Sử dụng SDK 6.0 để build
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
-WORKDIR /app
+# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
-# Copy file project và restore trước để tận dụng cache
-# LƯU Ý: Kiểm tra chính xác tên file MTKPM_FE.csproj ở đây
+# Copy file csproj và restore trước (tận dụng layer cache)
 COPY ["MTKPM_FE.csproj", "./"]
 RUN dotnet restore "MTKPM_FE.csproj"
 
-# Copy toàn bộ code còn lại và build
+# Sau đó mới copy toàn bộ code và build
 COPY . .
-RUN dotnet publish "MTKPM_FE.csproj" -c Release -o /app/publish /p:UseAppHost=false
-# Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
-WORKDIR /app
-COPY --from=build /app/out .
+RUN dotnet build "MTKPM_FE.csproj" -c Release -o /app/build
 
-# LƯU Ý: Kiểm tra chính xác tên file MTKPM_FE.dll ở đây
+# Stage 2: Publish
+FROM build AS publish
+RUN dotnet publish "MTKPM_FE.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# Stage 3: Final image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MTKPM_FE.dll"]
