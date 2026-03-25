@@ -1,5 +1,5 @@
 # Phần 1: Build ứng dụng bằng .NET SDK
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
 # Thay "Tên_Project_Của_Bạn" bằng tên file .csproj của bạn (ví dụ: MyApp.csproj)
@@ -11,7 +11,7 @@ WORKDIR "/src/"
 RUN dotnet publish "MTKPM_FE.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Phần 2: Chạy ứng dụng bằng .NET Runtime (nhẹ hơn)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
 WORKDIR /app
 EXPOSE 8080 
 COPY --from=build /app/publish .
